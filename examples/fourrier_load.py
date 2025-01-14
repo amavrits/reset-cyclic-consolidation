@@ -48,7 +48,7 @@ def DFT(x):
 
 if __name__ == "__main__":
 
-    time_grid = np.linspace(0, 1, 50)
+    time_grid = np.linspace(0, 1, 100)
 
     load_amplitudes = np.c_[np.arange(1, 4), np.arange(11, 14)]
     load_frequency = np.arange(1, 4)
@@ -78,16 +78,16 @@ if __name__ == "__main__":
     # amps = amps[idx]
     # freq = freq[idx]
 
-    AA = amps[:, None] * np.sin(freq[:, None]*time_grid)
-    AAA = AA.sum(0)
+    # AA = amps[:, None] * np.sin(freq[:, None]*time_grid)
+    # AAA = AA.sum(0)
 
 
     N = sigmas.size
-    interval = time_grid[1] - time_grid[0]
+    dt = time_grid[1] - time_grid[0]
     n_oneside = N // 2
-    amps = np.fft.fft(sigmas)
-    amps = np.abs(amps)[:n_oneside]
-    freq = np.fft.fftfreq(N, d=interval)
+    amps = np.fft.fft(sigmas) * dt
+    amps = np.abs(amps[:n_oneside])
+    freq = np.fft.fftfreq(N, dt)
     freq = freq[:n_oneside]
 
     fig = plt.figure()
@@ -100,6 +100,8 @@ if __name__ == "__main__":
     cv = 1.7e-8
     z_grid = np.linspace(0, h, 1_000)
 
+    A = np.c_[amps, freq]
+
     # u = consolidation(
     #     cv=cv,
     #     amplitudes=np.asarray([A, B]),
@@ -108,21 +110,21 @@ if __name__ == "__main__":
     #     time_grid=time_grid,
     # )
 
-    fig, axs = plt.subplots(2, 1, sharex=True, sharey=False)
-    axs[0].plot(time_grid, sigmas)
-    axs[0].plot(time_grid, AAA)
-    # axs[0].set_xlabel("Time [s]", fontsize=12)
-    # axs[0].set_ylabel("Load [kPa]", fontsize=12)
-    # axs[0].grid()
-    # contourf_ = axs[1].contourf(time_grid, z_grid.squeeze()/z_grid.max(), u/load_amplitude)
-    # cbar = fig.colorbar(contourf_)
-    # cbar.ax.get_yaxis().labelpad = 15
-    # cbar.ax.set_ylabel("Overpressure/Amplitude [-]", rotation=270)
-    # axs[1].set_xlabel("Time [s]", fontsize=12)
-    # axs[1].set_ylabel("z/H [-]", fontsize=12)
-    # axs[1].grid()
-    plt.close()
-    fig.savefig(r"results/fourrier_load_timelines.png")
+    # fig, axs = plt.subplots(2, 1, sharex=True, sharey=False)
+    # axs[0].plot(time_grid, sigmas)
+    # # axs[0].plot(time_grid, AAA)
+    # # axs[0].set_xlabel("Time [s]", fontsize=12)
+    # # axs[0].set_ylabel("Load [kPa]", fontsize=12)
+    # # axs[0].grid()
+    # # contourf_ = axs[1].contourf(time_grid, z_grid.squeeze()/z_grid.max(), u/load_amplitude)
+    # # cbar = fig.colorbar(contourf_)
+    # # cbar.ax.get_yaxis().labelpad = 15
+    # # cbar.ax.set_ylabel("Overpressure/Amplitude [-]", rotation=270)
+    # # axs[1].set_xlabel("Time [s]", fontsize=12)
+    # # axs[1].set_ylabel("z/H [-]", fontsize=12)
+    # # axs[1].grid()
+    # plt.close()
+    # fig.savefig(r"results/fourrier_load_timelines.png")
 
     # fig = plt.figure()
     # plt.plot(np.abs(u).max(axis=1)/load_amplitude, z_grid.squeeze()/z_grid.max())

@@ -1,43 +1,14 @@
 import numpy as np
+import jax
+import jax.numpy as jnp
+from src.consolidation import consolidation, jax_consolidation
 import matplotlib.pyplot as plt
 from typing import Union
 
 
-def consolidation(cv: float, amps: np.ndarray[Union[float, int], "2"], angular_frequency: Union[int, float],
-                  z_grid: np.ndarray[float, "n_depths"], time_grid: np.ndarray[float, "n_times"], n_terms: int = 1_000,
-                  eta: float = 1.):
-
-    amps = amps if amps.ndim > 1 else np.expand_dims(amps, axis=0)
-
-    H = z_grid.max()
-    A, B = np.hsplit(amps, 2)
-
-    H = z_grid.max()
-    A, B = np.hsplit(amps, 2)
-
-    j_grid = np.expand_dims(np.arange(1, n_terms+1), axis=(0, 1))
-    time_grid = np.expand_dims(time_grid, axis=(0, -1))
-    z_grid = np.expand_dims(z_grid, axis=(1, 2))
-
-    T_v = cv * time_grid / H ** 2
-
-    theta = eta * cv / (angular_frequency * H ** 2)
-
-    chi = (2 * j_grid - 1) * np.pi / 2
-
-    Y_j = (A + B * theta * chi ** 2) * (np.cos(angular_frequency * time_grid) - np.exp(-eta * chi ** 2 * T_v)) - \
-          (A * theta * chi ** 2 - B) * np.sin(angular_frequency * time_grid)
-
-    sum_arg = (-1) ** j_grid * Y_j * np.cos(chi * z_grid / H) / (chi + theta ** 2 * chi ** 5)
-
-    u = - 2 * eta * np.sum(sum_arg, axis=-1)
-
-    return u
-
-
 if __name__ == "__main__":
 
-    time_grid = np.linspace(0, 1, 1_000)
+    time_grid = np.linspace(0, 1, 100)
 
     load_amplitude = 1
     load_frequency = 1
@@ -48,11 +19,11 @@ if __name__ == "__main__":
     h = 1
     cv = 1.7e-8
 
-    z_grid = np.linspace(0, h, 1_000)
+    z_grid = np.linspace(0, h, 10)
 
     u = consolidation(
         cv=cv,
-        amplitudes=np.asarray([A, B]),
+        amps=(A, B),
         angular_frequency=load_angular_frequency,
         z_grid=z_grid,
         time_grid=time_grid,
@@ -82,4 +53,34 @@ if __name__ == "__main__":
     fig.savefig(r"results/sin_load_height.png")
 
 
-    
+    cvs = 10 ** jnp.linspace(-9, -4, 20)
+    frequencies = 10 ** jnp.linspace(-3, -1, 21)
+    angular_frequencies = 2 * jnp.pi * frequencies
+    cv_mesh, frequency_mesh = jnp.meshgrid(cvs, angular_frequencies)
+    cv_mesh, frequency_mesh = cv_mesh.flatten(), frequency_mesh.flatten()
+    angular_frequency_mesh = 2 * jnp.pi * frequency_mesh
+
+    f = lambda x, y: jax_consolidation(
+        cv=x,
+        amps=jnp.asarray([A, B]),
+        angular_frequency=y,
+        z_grid=jnp.asarray(z_grid),
+        time_grid=jnp.asarray(time_grid)
+    )
+    us = jax.vmap(f)(cv_mesh, angular_frequency_mesh)
+    us = us.reshape(angular_frequencies.size, cvs.size, z_grid.size, time_grid.size)
+    u_mid_max = us[..., 5, :].max(axis=(-1))
+    u_mid_max = np.asarray(u_mid_max)
+
+    fig = plt.figure()
+    cv_mesh, frequency_mesh = jnp.meshgrid(cvs, frequencies)
+    contourf_ = plt.contourf(cv_mesh, frequency_mesh, u_mid_max / load_amplitude)
+    cbar = fig.colorbar(contourf_)
+    cbar.ax.get_yaxis().labelpad = 15
+    cbar.ax.set_ylabel("Max. overpressure / Amplitude [-]", rotation=270, fontsize=12)
+    plt.xlabel("${c}_{v}$ [${m}^{2}/s$]", fontsize=12)
+    plt.ylabel("Frequency [Hz]", fontsize=12)
+    plt.grid()
+    plt.close()
+    fig.savefig(r"results/sin_load_sensitivity.png")
+
