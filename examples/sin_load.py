@@ -17,7 +17,7 @@ if __name__ == "__main__":
     A, B = 0, load_amplitude
 
     h = 1
-    cv = 1.7e-8
+    cv = 1.7e-2
 
     z_grid = np.linspace(0, h, 10)
 
@@ -30,10 +30,12 @@ if __name__ == "__main__":
     )
 
     fig, axs = plt.subplots(2, 1, sharex=True, sharey=False)
-    axs[0].plot(time_grid, sigmas)
+    axs[0].plot(time_grid, sigmas, label="Load")
+    axs[0].plot(time_grid, np.abs(u).max(0) * np.sign(sigmas), label="Max. overpressure")
     axs[0].set_xlabel("Time [s]", fontsize=12)
     axs[0].set_ylabel("Load [kPa]", fontsize=12)
     axs[0].grid()
+    axs[0].legend()
     contourf_ = axs[1].contourf(time_grid, z_grid.squeeze()/z_grid.max(), u/load_amplitude)
     cbar = fig.colorbar(contourf_)
     cbar.ax.get_yaxis().labelpad = 15
