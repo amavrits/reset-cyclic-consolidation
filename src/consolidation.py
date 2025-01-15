@@ -1,4 +1,5 @@
 import numpy as np
+from src.fourrier import decompose
 import jax
 import jax.numpy as jnp
 from typing import Union
@@ -8,6 +9,8 @@ from jaxtyping import Array, Float, Int
 def consolidation(cv: float, amps: Union[tuple, list, np.ndarray[Union[float, int], "2"]],
                   angular_frequency: Union[int, float], z_grid: np.ndarray[float, "n_depths"],
                   time_grid: np.ndarray[float, "n_times"], n_terms: int = 1_000, eta: float = 1.):
+
+    angular_frequency = angular_frequency if np.abs(angular_frequency) > 1e-6 else 1e-6  # Failsafe for angular_frequency=0
 
     H = z_grid.max()
     A, B = amps
@@ -28,6 +31,25 @@ def consolidation(cv: float, amps: Union[tuple, list, np.ndarray[Union[float, in
     sum_arg = (-1) ** j_grid * Y_j * np.cos(chi * z_grid / H) / (chi + theta ** 2 * chi ** 5)
 
     u = - 2 * eta * np.sum(sum_arg, axis=-1)
+
+    return u
+
+
+def consolidation_fourrier(load: np.ndarray[float, "n_times"], cv: float, z_grid: np.ndarray[float, "n_depths"],
+                  time_grid: np.ndarray[float, "n_times"], n_terms: int = 1_000, eta: float = 1.):
+
+    A, B, angular_freqs, _ = decompose(load, time_grid)
+
+    n_comps = load.size
+    n_depths = z_grid.size
+    n_times = time_grid.size
+    u_comps = np.zeros((n_comps, n_depths, n_times))
+
+    for i, (a, b, omega) in enumerate(zip(A, B, angular_freqs)):
+        u_comps[i] = consolidation(cv, (a, b), omega, z_grid, time_grid, n_terms, eta)
+
+    u = u_comps.sum(axis=0)
+
 
     return u
 

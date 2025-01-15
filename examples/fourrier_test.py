@@ -13,8 +13,9 @@ if __name__ == "__main__":
     sigmas = load_amplitudes[0] * np.cos(load_angular_frequency*3 * time_grid) + \
               load_amplitudes[1] * np.sin(load_angular_frequency * time_grid)
     sigmas = sigmas + 10
+    sigmas = np.hstack((np.hstack((np.zeros(10), np.ones(30))), np.ones(60)))
 
-    A, B, omegas, y = decompose(sigmas, time_grid)
+    A, B, angular_freqs, y = decompose(sigmas, time_grid)
 
     fig, ax = plt.subplots()
     ax.plot(time_grid, sigmas)

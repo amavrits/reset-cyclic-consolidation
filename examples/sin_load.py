@@ -17,7 +17,7 @@ if __name__ == "__main__":
     A, B = 0, load_amplitude
 
     h = 1
-    cv = 1.7e-2
+    cv = 1e-0
 
     z_grid = np.linspace(0, h, 10)
 
@@ -29,28 +29,22 @@ if __name__ == "__main__":
         time_grid=time_grid,
     )
 
-    fig, axs = plt.subplots(2, 1, sharex=True, sharey=False)
-    axs[0].plot(time_grid, sigmas, label="Load")
-    axs[0].plot(time_grid, np.abs(u).max(0) * np.sign(sigmas), label="Max. overpressure")
-    axs[0].set_xlabel("Time [s]", fontsize=12)
-    axs[0].set_ylabel("Load [kPa]", fontsize=12)
-    axs[0].grid()
-    axs[0].legend()
-    contourf_ = axs[1].contourf(time_grid, z_grid.squeeze()/z_grid.max(), u/load_amplitude)
-    cbar = fig.colorbar(contourf_)
-    cbar.ax.get_yaxis().labelpad = 15
-    cbar.ax.set_ylabel("Overpressure/Amplitude [-]", rotation=270)
-    axs[1].set_xlabel("Time [s]", fontsize=12)
-    axs[1].set_ylabel("z/H [-]", fontsize=12)
-    axs[1].grid()
+    fig = plt.figure()
+    plt.plot(time_grid, sigmas, label="Load")
+    for i, z in enumerate(z_grid[::2]):
+        plt.plot(time_grid, u[i], label=str(z))
+    plt.xlabel("Time [s]", fontsize=12)
+    plt.ylabel("Overpressure [kPa]", fontsize=12)
+    plt.legend()
     plt.close()
     fig.savefig(r"results/sin_load_timelines.png")
 
     fig = plt.figure()
-    plt.plot(np.abs(u).max(axis=1)/load_amplitude, z_grid.squeeze()/z_grid.max())
-    plt.xlabel("Overpressure/Amplitude [-]", fontsize=12)
-    plt.ylabel("z/H [-]", fontsize=12)
-    plt.grid()
+    for i, t in enumerate(time_grid):
+        plt.plot(u[:, i], z_grid, label=str(t))
+    plt.xlabel("Overpressure [kPa]", fontsize=12)
+    plt.ylabel("Depth [m]", fontsize=12)
+    plt.legend()
     plt.close()
     fig.savefig(r"results/sin_load_height.png")
 
