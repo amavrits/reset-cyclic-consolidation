@@ -36,9 +36,10 @@ def consolidation(cv: float, amps: Union[tuple, list, np.ndarray[Union[float, in
 
 
 def consolidation_fourrier(load: np.ndarray[float, "n_times"], cv: float, z_grid: np.ndarray[float, "n_depths"],
-                  time_grid: np.ndarray[float, "n_times"], n_terms: int = 1_000, eta: float = 1.):
+                           time_grid: np.ndarray[float, "n_times"], n_terms: int = 1_000, eta: float = 1.,
+                           keep_positive: bool = False):
 
-    A, B, angular_freqs, _ = decompose(load, time_grid)
+    A, B, angular_freqs, _ = decompose(load, time_grid, keep_positive)
 
     n_comps = load.size
     n_depths = z_grid.size
@@ -49,7 +50,6 @@ def consolidation_fourrier(load: np.ndarray[float, "n_times"], cv: float, z_grid
         u_comps[i] = consolidation(cv, (a, b), omega, z_grid, time_grid, n_terms, eta)
 
     u = u_comps.sum(axis=0)
-
 
     return u
 

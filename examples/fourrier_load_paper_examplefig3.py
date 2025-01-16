@@ -6,17 +6,18 @@ import matplotlib.pyplot as plt
 if __name__ == "__main__":
 
     h = 1
-    cv = 1e-0
+    cv = 1e+2
 
-    time_grid = np.linspace(0, 2, 200)
+    tb = 2.5 * h ** 2 / cv
+    ta = 0.05 * tb
+    T = 1.05 * tb
+
+    time_grid = np.linspace(0, T, 100)
     z_grid = np.linspace(0, h, 20)
 
     fixed_load = 10
-    load_amplitude = 1
     load_frequency = 5
-    load_angular_frequency = 2 * np.pi * load_frequency
-    # load = np.where(time_grid >= 0.1, fixed_load + load_amplitude * np.sin(load_angular_frequency * time_grid), 0)
-    load = np.where(time_grid >= 0.1, fixed_load, 0)
+    load = np.where(np.logical_and(time_grid >= ta, time_grid <= tb), fixed_load, 0)
 
     u = consolidation_fourrier(load, cv, z_grid, time_grid)
 
@@ -30,16 +31,17 @@ if __name__ == "__main__":
     plt.legend(title="z/H [-]")
     plt.grid()
     plt.close()
-    fig.savefig(r"results/fourrier_load_timelines.png")
+    fig.savefig(r"results/paper_fig3_timelines.png")
 
     fig = plt.figure()
-    for i in range(0, time_grid.size, 40):
-        t = time_grid[i]
-        plt.plot(u[:, i], z_grid/h, label=str(round(t, 1)))
-    plt.xlabel("Overpressure [kPa]", fontsize=12)
+    T_v = cv * (time_grid - ta) / h ** 2
+    for tv in [0.1, 0.2, 0.4, 0.7, 0.9]:
+        i = np.argmin(np.abs(T_v-tv))
+        plt.plot(u[:, i]/fixed_load, z_grid/h, label=str(round(tv, 1)))
+    plt.xlabel("u/q [-]", fontsize=12)
     plt.ylabel("z/H [-]", fontsize=12)
-    plt.legend(title="Time [s]")
+    plt.legend(title="${T}_{v}$ [-]")
     plt.grid()
     plt.close()
-    fig.savefig(r"results/fourrier_load_height.png")
+    fig.savefig(r"results/paper_fig3_height.png")
 

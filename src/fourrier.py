@@ -1,15 +1,21 @@
 import numpy as np
 
 
-def decompose(load: np.ndarray[float, "n_times"], times: np.ndarray[float, "n_times"]):
+def decompose(signal: np.ndarray[float, "n_times"], times: np.ndarray[float, "n_times"], keep_positive: bool = False):
 
-    N = load.size
+    N = signal.size
     dt = times[1] - times[0]
-    yf = np.fft.fft(load)
+    magnitude = np.fft.fft(signal)
     freq = np.fft.fftfreq(N, dt)
 
-    A = np.real(yf) / N
-    B = - np.imag(yf) / N
+    #TODO: Need to change the equation for reconstructing the signal when only keeping the positive frequencies.
+    if keep_positive:
+        freq = freq[:N//2]
+        magnitude = np.abs(magnitude[:N//2]) # Scaling to account for removed negative side
+        magnitude[1:-1] *= 2
+
+    A = np.real(magnitude) / N
+    B = - np.imag(magnitude) / N
     angular_freqs = 2 * np.pi * freq
 
     y = np.sum(A[:, None] * np.cos(angular_freqs[:, None] * times) + \
