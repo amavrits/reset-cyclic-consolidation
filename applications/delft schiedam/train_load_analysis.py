@@ -9,8 +9,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 if __name__ == "__main__":
 
-    depth = 5
-    distribution_angle = 45
+    depth = 6.
+    distribution_angle = 45.
 
     with open('data/trains/data_trains.json', 'r') as f:
         data_all_trains = json.load(f)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
 
     """ Sensitivity analysis for the distribution angle. """
-    depth = 3.6
+    depth = 6.
     distribution_angles = np.arange(15, 90, 15)
     distributed_loads = np.zeros((distribution_angles.size, loads.size))
     for i_angle, distribution_angle in enumerate(distribution_angles):
